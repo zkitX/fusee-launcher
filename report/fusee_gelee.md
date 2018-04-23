@@ -445,7 +445,7 @@ Windows support would require addition of a custom kernel module, and thus was
 beyond the scope of a simple proof-of-concept.
 
 To use this proof-of-concept on a Nintendo Switch:
-  1. Set up an Linux or macOS environment that meets the criteira above, and
+  1. Set up an Linux or macOS environment that meets the criteria above, and
      which has a working `python3` and `pyusb` installed.
   2. Connect the Switch to your host PC with a USB A -> USB C cable.
   3. Boot the Switch in RCM mode. There are three ways to do this, but the first--
