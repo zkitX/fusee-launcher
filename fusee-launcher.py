@@ -434,7 +434,7 @@ print("Found a Tegra with Device ID: {}".format(device_id))
 # Prefix the image with an RCM command, so it winds up loaded into memory
 # at the right location (0x40010000).
 
-# Use the maximum length accepted by RCM, so we can transmit as much payload as 
+# Use the maximum length accepted by RCM, so we can transmit as much payload as
 # we want; we'll take over before we get to the end.
 length  = 0x30298
 payload = length.to_bytes(4, byteorder='little')
