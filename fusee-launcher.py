@@ -474,6 +474,10 @@ payload_length = len(payload)
 padding_size   = 0x1000 - (payload_length % 0x1000)
 payload += (b'\0' * padding_size)
 
+if len(payload) > length:
+    print("ERROR: Too large payload! (%x vs %x)" % (len(payload), length))
+    sys.exit(-2)
+
 # Send the constructed payload, which contains the command, the stack smashing
 # values, the Intermezzo relocation stub, and the final payload.
 print("Uploading payload...")
