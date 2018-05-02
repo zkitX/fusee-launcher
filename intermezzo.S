@@ -30,7 +30,7 @@ post_relocation:
     bl  copy
 
     // Finally, jump into the relocated target.
-    ldr r0, =RELOCATION_TARGET
+    ldr r0, =ENTRY_POINT_ADDRESS
     bx r0
 
 
