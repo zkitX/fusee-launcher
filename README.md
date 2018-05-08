@@ -45,19 +45,21 @@ The main launcher is "fusee-launcher.py". More instructions are to follow.
 Fusée Gelée (CVE-2018-6242) was discovered and implemented by Kate Temkin (@ktemkin);
 its launcher is developed and maintained by Mikaela Szekely (@Qyriad) and Kate Temkin (@ktemkin).
 
-CVE-2018-6242 was also independently discovered by fail0verflow member 
-shuffle2 as the "shofEL2" vulnerability-- so that's awesome, too.
-
 Credit goes to:
-    * Qyriad -- maintainership and expansion of the code
-    * SciresM, motezazer -- guidance and support  
-    * hedgeberg, andeor  -- dumping the Jetson bootROM
-    * TuxSH -- help with a first pass of bootROM RE
-    * the ReSwitched team
+
+  * Qyriad -- maintainership and expansion of the code
+  * SciresM, motezazer -- guidance and support  
+  * hedgeberg, andeor  -- dumping the Jetson bootROM
+  * TuxSH -- help with a first pass of bootROM RE
+  * the ReSwitched team
 
 Love / greetings to:
-    * Levi / lasersquid
-    * Aurora Wright
-    * f916253
-    * MassExplosion213 
-    * Schala
+
+  * Levi / lasersquid
+  * Aurora Wright
+  * f916253
+  * MassExplosion213 
+  * Schala
+
+CVE-2018-6242 was also independently discovered by fail0verflow member 
+shuffle2 as the "shofEL2" vulnerability-- so that's awesome, too.
