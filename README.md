@@ -39,11 +39,9 @@ The vulnerability is documented in the 'report' subfolder; more details and
 guides are to follow! Stay tuned...
 
 ### Use Instructions
-
 The main launcher is "fusee-launcher.py". More instructions are to follow.
 
-### Credits
-            
+### Credits            
 Fusée Gelée (CVE-2018-6242) was discovered and implemented by Kate Temkin (@ktemkin);
 its launcher is developed and maintained by Mikaela Szekely (@Qyriad) and Kate Temkin (@ktemkin).
 
