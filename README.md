@@ -39,7 +39,9 @@ The vulnerability is documented in the 'report' subfolder; more details and
 guides are to follow! Stay tuned...
 
 ### Use Instructions
-The main launcher is "fusee-launcher.py". More instructions are to follow.
+The main launcher is "fusee-launcher.py". Linux and macOS are natively supported with Windows support coming Soon™.
+
+With a Tegra device in RCM and connected via USB, invoke the launcher with the desired payload as an argument, e.g. `./fusee-launcher.py payload.bin`. Linux systems currently require either that the Tegra device be connected to an XHCI controller (used with blue USB 3 ports) or that the user has patched their EHCI driver. 
 
 ### Credits            
 Fusée Gelée (CVE-2018-6242) was discovered and implemented by Kate Temkin (@ktemkin);
