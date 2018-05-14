@@ -62,9 +62,10 @@ class HaxBackend:
     # List of OSs this class supports.
     SUPPORTED_SYSTEMS = []
 
-    def __init__(self, usb_device):
+    def __init__(self, usb_device, skip_checks=False):
         """ Sets up the backend for the given device. """
         self.dev = usb_device
+        self.skip_checks = skip_checks
 
 
     def print_warnings(self):
@@ -95,13 +96,13 @@ class HaxBackend:
 
 
     @classmethod
-    def create_appropriate_backend(cls, usb_device):
+    def create_appropriate_backend(cls, usb_device, system_override=None, skip_checks=False):
         """ Creates a backend object appropriate for the current OS. """
 
         # Search for a supportive backend, and try to create one.
         for subclass in cls.__subclasses__():
-            if subclass.supported():
-                return subclass(usb_device)
+            if subclass.supported(system_override):
+                return subclass(usb_device, skip_checks=skip_checks)
 
         # ... if we couldn't, bail out.
         raise IOError("No backend to trigger the vulnerability-- it's likely we don't support your OS!")
@@ -226,13 +227,18 @@ class LinuxBackend(HaxBackend):
 
         from glob import glob
 
+        # If we're overriding checks, never fail out.
+        if self.skip_checks:
+            print("skipping checks")
+            return
+
         # Search each device bound to the xhci_hcd driver for the active device...
         for hci_name in self.SUPPORTED_USB_CONTROLLERS:
             for path in glob("/sys/bus/{}/*/usb*".format(hci_name)):
                 if self._node_matches_our_device(path):
                     return
 
-        raise ValueError("This device needs to be on an XHCI backend. Usually that means plugged into a blue/USB 3.0 port!\nBailing out.")
+        raise ValueError("This device needs to be on a supported backend. Usually that means plugged into a blue/USB 3.0 port!\nBailing out.")
 
 
     def _node_matches_our_device(self, path):
@@ -285,7 +291,7 @@ class RCMHax:
     COPY_BUFFER_ADDRESSES   = [0x40005000, 0x40009000]   # The addresses of the DMA buffers we can trigger a copy _from_.
     STACK_END               = 0x40010000                 # The address just after the end of the device's stack.
 
-    def __init__(self, wait_for_device=False, os_override=None, vid=None, pid=None):
+    def __init__(self, wait_for_device=False, os_override=None, vid=None, pid=None, override_checks=False):
         """ Set up our RCM hack connection."""
 
         # The first write into the bootROM touches the lowbuffer.
@@ -312,7 +318,7 @@ class RCMHax:
 
         # Create a vulnerability backend for the given device.
         try:
-            self.backend = HaxBackend.create_appropriate_backend(self.dev)
+            self.backend = HaxBackend.create_appropriate_backend(self.dev, system_override=os_override, skip_checks=override_checks)
         except IOError:
             print("It doesn't look like we support your OS, currently. Sorry about that!\n")
             sys.exit(-1)
@@ -402,6 +408,7 @@ class RCMHax:
 
         return self.backend.trigger_vulnerability(length)
 
+
 def parse_usb_id(id):
     """ Quick function to parse VID/PID arguments. """
     return int(id, 16)
@@ -412,8 +419,10 @@ parser.add_argument('payload', metavar='payload', type=str, help='ARM payload to
 parser.add_argument('-w', dest='wait', action='store_true', help='wait for an RCM connection if one isn\'t present')
 parser.add_argument('-V', metavar='vendor_id', dest='vid', type=parse_usb_id, default=None, help='overrides the TegraRCM vendor ID')
 parser.add_argument('-P', metavar='product_id', dest='pid', type=parse_usb_id, default=None, help='overrides the TegraRCM product ID')
-parser.add_argument('--override-os', metavar='platform', type=str, default=None, help='overrides the detected OS; for advanced users only')
+parser.add_argument('--override-os', metavar='platform', dest='platform', type=str, default=None, help='overrides the detected OS; for advanced users only')
 parser.add_argument('--relocator', metavar='binary', dest='relocator', type=str, default="intermezzo.bin", help='provides the path to the intermezzo relocation stub')
+parser.add_argument('--override-checks', dest='skip_checks', action='store_true', help="don't check for a supported controller; useful if you've patched your EHCI driver")
+parser.add_argument('--allow-failed-id', dest='permissive_id', action='store_true', help="continue even if reading the device's ID fails; useful for development but not for end users")
 arguments = parser.parse_args()
 
 # Expand out the payload path to handle any user-refrences.
@@ -430,14 +439,21 @@ if not os.path.isfile(intermezzo_path):
 
 # Get a connection to our device.
 try:
-    switch = RCMHax(wait_for_device=arguments.wait, vid=arguments.vid, pid=arguments.pid)
+    switch = RCMHax(wait_for_device=arguments.wait, vid=arguments.vid, 
+            pid=arguments.pid, os_override=arguments.platform, override_checks=arguments.skip_checks)
 except IOError as e:
     print(e)
     sys.exit(-1)
 
 # Print the device's ID. Note that reading the device's ID is necessary to get it into
-device_id = switch.read_device_id().tostring()
-print("Found a Tegra with Device ID: {}".format(device_id))
+try:
+    device_id = switch.read_device_id().tostring()
+    print("Found a Tegra with Device ID: {}".format(device_id))
+except usb.core.USBError as e:
+    # Raise the exception only if we're not being permissive about ID reads.
+    if not arguments.permissive_id:
+        raise e
+
 
 # Prefix the image with an RCM command, so it winds up loaded into memory
 # at the right location (0x40010000).
