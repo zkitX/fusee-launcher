@@ -22,6 +22,11 @@
 # greetings to:
 #    shuffle2
 
+# This file is part of Fusée Launcher
+# Copyright (C) 2018 Mikaela Szekely <qyriad@gmail.com>
+# Copyright (C) 2018 Kate Temkin <k@ktemkin.com>
+# Fusée Launcher is licensed under the terms of the GNU GPLv2
+
 import os
 import sys
 import usb
