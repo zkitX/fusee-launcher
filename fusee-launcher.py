@@ -29,8 +29,6 @@
 
 import os
 import sys
-import usb
-import time
 import errno
 import ctypes
 import argparse
@@ -131,6 +129,9 @@ class HaxBackend:
 
     def find_device(self, vid=None, pid=None):
         """ Set and return the device to be used """
+
+        import usb
+
         self.dev = usb.core.find(idVendor=vid, idProduct=pid)
         return self.dev
 
@@ -599,7 +600,7 @@ except IOError as e:
 try:
     device_id = switch.read_device_id()
     print("Found a Tegra with Device ID: {}".format(device_id))
-except usb.core.USBError as e:
+except OSError as e:
     # Raise the exception only if we're not being permissive about ID reads.
     if not arguments.permissive_id:
         raise e
