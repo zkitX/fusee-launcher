@@ -39,7 +39,7 @@ The vulnerability is documented in the 'report' subfolder; more details and
 guides are to follow! Stay tuned...
 
 ### Use Instructions
-The main launcher is "fusee-launcher.py". Windows, Linux, and macOS are all natively supported! It's mildly more complicated on Windows, so more indepth usage instructions are on the way.
+The main launcher is "fusee-launcher.py". Windows, Linux, and macOS are all natively supported! Instructions for Windows specifically can be found on the [wiki](https://github.com/reswitched/fusee-launcher/wiki/Instructions-(Windows)).
 
 With a Tegra device in RCM and connected via USB, invoke the launcher with the desired payload as an argument, e.g. `./fusee-launcher.py payload.bin`. Linux systems currently require either that the Tegra device be connected to an XHCI controller (used with blue USB 3 ports) or that the user has patched their EHCI driver. 
 
