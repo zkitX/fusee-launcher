@@ -141,11 +141,11 @@ class MacOSBackend(HaxBackend):
     Simple vulnerability trigger for macOS: we simply ask libusb to issue
     the broken control request, and it'll do it for us. :)
 
-    We also support platforms with a hacked libusb.
+    We also support platforms with a hacked libusb and FreeBSD.
     """
 
     BACKEND_NAME = "macOS"
-    SUPPORTED_SYSTEMS = ['Darwin', 'libusbhax', 'macos']
+    SUPPORTED_SYSTEMS = ['Darwin', 'libusbhax', 'macos', 'FreeBSD']
 
     def trigger_vulnerability(self, length):
 
