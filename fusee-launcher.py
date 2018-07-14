@@ -17,7 +17,7 @@
 #    TuxSH              -- for IDB notes that were nice to peek at
 #
 # much love to:
-#    Aurora Wright, Qyriad, f916253, MassExplosion213, Schala, and Levi
+#    Aurora Wright, Qyriad, f916253, MassExplosion213, and Levi
 #
 # greetings to:
 #    shuffle2
